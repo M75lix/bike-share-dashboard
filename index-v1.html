@@ -1,0 +1,385 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bike Share Data Analysis Dashboard</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/3.9.1/chart.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        header {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 10px 30px rgba(0,0,0,0.2);
+            margin-bottom: 30px;
+            text-align: center;
+        }
+
+        h1 {
+            color: #667eea;
+            font-size: 2.5em;
+            margin-bottom: 10px;
+        }
+
+        .subtitle {
+            color: #666;
+            font-size: 1.1em;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .stat-card {
+            background: white;
+            padding: 25px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+            text-align: center;
+            transition: transform 0.3s ease;
+        }
+
+        .stat-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(0,0,0,0.15);
+        }
+
+        .stat-value {
+            font-size: 2.5em;
+            font-weight: bold;
+            color: #667eea;
+            margin: 10px 0;
+        }
+
+        .stat-label {
+            color: #666;
+            font-size: 1em;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(500px, 1fr));
+            gap: 30px;
+            margin-bottom: 30px;
+        }
+
+        .chart-card {
+            background: white;
+            padding: 30px;
+            border-radius: 15px;
+            box-shadow: 0 5px 15px rgba(0,0,0,0.1);
+        }
+
+        .chart-title {
+            font-size: 1.5em;
+            color: #333;
+            margin-bottom: 20px;
+            text-align: center;
+        }
+
+        footer {
+            background: white;
+            padding: 20px;
+            border-radius: 15px;
+            text-align: center;
+            color: #666;
+            margin-top: 30px;
+        }
+
+        @media (max-width: 768px) {
+            .charts-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            h1 {
+                font-size: 1.8em;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>🚴 Bike Share Data Analysis Dashboard</h1>
+            <p class="subtitle">Analysis of 84,770 rides across the network</p>
+        </header>
+
+        <div class="stats-grid">
+            <div class="stat-card">
+                <div class="stat-label">Total Rides</div>
+                <div class="stat-value" id="totalRides">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Member Rides</div>
+                <div class="stat-value" id="memberRides">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Casual Rides</div>
+                <div class="stat-value" id="casualRides">-</div>
+            </div>
+            <div class="stat-card">
+                <div class="stat-label">Avg Ride Length</div>
+                <div class="stat-value" id="avgRideLength">-</div>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3 class="chart-title">Rides by Day of Week</h3>
+                <canvas id="dayChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Member vs Casual Distribution</h3>
+                <canvas id="memberChart"></canvas>
+            </div>
+        </div>
+
+        <div class="charts-grid">
+            <div class="chart-card">
+                <h3 class="chart-title">Rides by Member Type and Day</h3>
+                <canvas id="combinedChart"></canvas>
+            </div>
+            <div class="chart-card">
+                <h3 class="chart-title">Top 10 Start Stations</h3>
+                <canvas id="stationChart"></canvas>
+            </div>
+        </div>
+
+        <footer>
+            <p>Bike Share Analysis Dashboard © 2025 | Data-driven insights for better transportation</p>
+        </footer>
+    </div>
+
+    <script>
+        // Your actual bike share data
+        const DATA = {
+            "stats": {
+                "total": 84770,
+                "members": 61145,
+                "casual": 23625,
+                "avgMinutes": 25.7
+            },
+            "dayCounts": [
+                0,
+                17915,
+                10745,
+                12811,
+                8717,
+                11701,
+                9972
+            ],
+            "memberByDay": [
+                0,
+                11440,
+                8064,
+                9156,
+                6919,
+                9262,
+                7462
+            ],
+            "casualByDay": [
+                0,
+                6475,
+                2681,
+                3655,
+                1798,
+                2439,
+                2510
+            ],
+            "topStations": [
+                ["176", 850],
+                ["110", 730],
+                ["56", 720],
+                ["211", 686],
+                ["94", 626],
+                ["199", 614],
+                ["300", 605],
+                ["324", 584],
+                ["144", 576],
+                ["301", 576]
+            ]
+        };
+
+        const dayNames = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+
+        // Initialize dashboard when page loads
+        window.addEventListener('DOMContentLoaded', function() {
+            loadDashboard();
+        });
+
+        function loadDashboard() {
+            // Update stats
+            document.getElementById('totalRides').textContent = DATA.stats.total.toLocaleString();
+            document.getElementById('memberRides').textContent = DATA.stats.members.toLocaleString();
+            document.getElementById('casualRides').textContent = DATA.stats.casual.toLocaleString();
+            document.getElementById('avgRideLength').textContent = DATA.stats.avgMinutes + ' min';
+
+            // Create charts
+            createDayChart();
+            createMemberChart();
+            createCombinedChart();
+            createStationChart();
+        }
+
+        function createDayChart() {
+            const ctx = document.getElementById('dayChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: dayNames,
+                    datasets: [{
+                        label: 'Number of Rides',
+                        data: DATA.dayCounts,
+                        backgroundColor: 'rgba(102, 126, 234, 0.8)',
+                        borderColor: 'rgba(102, 126, 234, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            ticks: {
+                                callback: function(value) {
+                                    return value.toLocaleString();
+                                }
+                            }
+                        }
+                    }
+                }
+            });
+        }
+
+        function createMemberChart() {
+            const ctx = document.getElementById('memberChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'doughnut',
+                data: {
+                    labels: ['Members', 'Casual'],
+                    datasets: [{
+                        data: [DATA.stats.members, DATA.stats.casual],
+                        backgroundColor: [
+                            'rgba(102, 126, 234, 0.8)',
+                            'rgba(118, 75, 162, 0.8)'
+                        ],
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    }
+                }
+            });
+        }
+
+        function createCombinedChart() {
+            const ctx = document.getElementById('combinedChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: dayNames,
+                    datasets: [
+                        {
+                            label: 'Members',
+                            data: DATA.memberByDay,
+                            borderColor: 'rgba(102, 126, 234, 1)',
+                            backgroundColor: 'rgba(102, 126, 234, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        },
+                        {
+                            label: 'Casual',
+                            data: DATA.casualByDay,
+                            borderColor: 'rgba(118, 75, 162, 1)',
+                            backgroundColor: 'rgba(118, 75, 162, 0.1)',
+                            tension: 0.4,
+                            fill: true
+                        }
+                    ]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            position: 'bottom'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+
+        function createStationChart() {
+            const ctx = document.getElementById('stationChart').getContext('2d');
+            new Chart(ctx, {
+                type: 'bar',
+                data: {
+                    labels: DATA.topStations.map(s => 'Station ' + s[0]),
+                    datasets: [{
+                        label: 'Number of Rides',
+                        data: DATA.topStations.map(s => s[1]),
+                        backgroundColor: 'rgba(118, 75, 162, 0.8)',
+                        borderColor: 'rgba(118, 75, 162, 1)',
+                        borderWidth: 2
+                    }]
+                },
+                options: {
+                    indexAxis: 'y',
+                    responsive: true,
+                    maintainAspectRatio: true,
+                    plugins: {
+                        legend: {
+                            display: false
+                        }
+                    },
+                    scales: {
+                        x: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+    </script>
+</body>
+</html>
