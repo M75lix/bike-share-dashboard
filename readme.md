@@ -102,7 +102,7 @@ The dashboard provides four key visualizations:
 
 ## 🚀 Live Demo
 
-**View Dashboard**: [Your GitHub Username].github.io/bike-share-dashboard
+**View Dashboard**: m75lix.github.io/bike-share-dashboard/index.html 
 
 The dashboard loads instantly with full analysis - no file uploads or configuration needed.
 
