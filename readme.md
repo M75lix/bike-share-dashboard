@@ -186,7 +186,7 @@ This dashboard was created as part of the Google Data Analytics Capstone Project
 
 ## 👤 Author
 
-Data analysis and visualization by [Your Name]
+Data analysis and visualization by [M75lix]
 
 **Skills Demonstrated:**
 - Python (data processing with Pandas)
